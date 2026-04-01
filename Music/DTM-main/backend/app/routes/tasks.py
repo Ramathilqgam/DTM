@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from bson import ObjectId
+from datetime import datetime
 from ..models.task import Task
 from ..models.user import User
 
@@ -19,42 +19,52 @@ def get_tasks():
     if user.get("role") == "admin":
         tasks = Task.find_all()
     else:
-        tasks = Task.find_by_user(user_id)
+        tasks = Task.find_visible_to_user(user_id)
 
     return jsonify([Task.to_dict(task) for task in tasks]), 200
 
 
-# Create a new task (admin only)
+# Create a new task
 @tasks_bp.route("/", methods=["POST"])
 @jwt_required()
 def create_task():
     user_id = get_jwt_identity()
     user = User.find_by_id(user_id)
 
-    if not user or user.get("role") != "admin":
-        return jsonify({"error": "Unauthorized - Admin access required"}), 403
+    if not user:
+        return jsonify({"error": "User not found"}), 404
 
     data = request.get_json()
 
-    # Validate required fields
-    if not data.get("title") or not data.get("assigned_to"):
-        return jsonify({"error": "Missing required fields: title, assigned_to"}), 400
+    if not data.get("title"):
+        return jsonify({"error": "Missing required field: title"}), 400
 
     try:
+        due_date = data.get("due_date")
+
+        if due_date:
+            try:
+                due_date = datetime.strptime(due_date, "%Y-%m-%d")
+            except:
+                due_date = None
+
         task = Task.create(
             title=data.get("title"),
             description=data.get("description", ""),
-            assigned_to=data.get("assigned_to"),
-            created_by=user_id,
-            due_date=data.get("due_date"),
+            assigned_to=None,
+            created_by=user_id,  # ✅ IMPORTANT FIX
+            due_date=due_date,
             priority=data.get("priority", "medium")
         )
+
         return jsonify(Task.to_dict(task)), 201
+
     except Exception as e:
+        print("CREATE ERROR:", str(e))
         return jsonify({"error": str(e)}), 400
 
 
-# Update a task (admin or assigned user)
+# Update task
 @tasks_bp.route("/<task_id>", methods=["PUT"])
 @jwt_required()
 def update_task(task_id):
@@ -65,16 +75,16 @@ def update_task(task_id):
     if not task:
         return jsonify({"error": "Task not found"}), 404
 
-    # Check authorization
-    if user.get("role") != "admin" and str(task.get("assigned_to")) != user_id:
-        return jsonify({"error": "Unauthorized - You can only update your own tasks"}), 403
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    if user.get("role") != "admin" and str(task.get("assigned_to")) != user_id and str(task.get("created_by")) != user_id:
+        return jsonify({"error": "Unauthorized"}), 403
 
     data = request.get_json()
     update_data = {}
 
-    # Allow updating specific fields
-    allowed_fields = ["title", "description", "status", "priority", "due_date"]
-    for field in allowed_fields:
+    for field in ["title", "description", "status", "priority", "due_date"]:
         if field in data:
             update_data[field] = data[field]
 
@@ -85,34 +95,37 @@ def update_task(task_id):
         if Task.update(task_id, update_data):
             updated_task = Task.find_by_id(task_id)
             return jsonify(Task.to_dict(updated_task)), 200
-        return jsonify({"error": "Failed to update task"}), 500
+        return jsonify({"error": "Update failed"}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
 
-# Delete a task (admin only)
+# Delete task
 @tasks_bp.route("/<task_id>", methods=["DELETE"])
 @jwt_required()
 def delete_task(task_id):
     user_id = get_jwt_identity()
     user = User.find_by_id(user_id)
 
-    if not user or user.get("role") != "admin":
-        return jsonify({"error": "Unauthorized - Admin access required"}), 403
+    if not user:
+        return jsonify({"error": "User not found"}), 404
 
     task = Task.find_by_id(task_id)
     if not task:
         return jsonify({"error": "Task not found"}), 404
 
+    if user.get("role") != "admin" and str(task.get("assigned_to")) != user_id and str(task.get("created_by")) != user_id:
+        return jsonify({"error": "Unauthorized"}), 403
+
     try:
         if Task.delete(task_id):
-            return jsonify({"message": "Task deleted successfully"}), 200
-        return jsonify({"error": "Failed to delete task"}), 500
+            return jsonify({"message": "Deleted"}), 200
+        return jsonify({"error": "Delete failed"}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
 
-# Get task details
+# Get single task
 @tasks_bp.route("/<task_id>", methods=["GET"])
 @jwt_required()
 def get_task(task_id):
@@ -123,8 +136,10 @@ def get_task(task_id):
     if not task:
         return jsonify({"error": "Task not found"}), 404
 
-    # Check authorization
-    if user.get("role") != "admin" and str(task.get("assigned_to")) != user_id:
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    if user.get("role") != "admin" and str(task.get("assigned_to")) != user_id and str(task.get("created_by")) != user_id:
         return jsonify({"error": "Unauthorized"}), 403
 
     return jsonify(Task.to_dict(task)), 200

@@ -15,3 +15,24 @@ dist/
 .vscode/
 .idea/
 *.DS_Store
+
+# Cursor / Copilot / AI tooling
+.cursor/
+.claude/
+.copilot/
+.local/
+
+# Windows user-profile noise (repo is accidentally rooted at C:\Users\ELCOT)
+AppData/
+Contacts/
+Desktop.ini
+Downloads/
+Favorites/
+Links/
+OneDrive/
+"Saved Games"/
+Searches/
+Videos/
+Zotero/
+NTUSER.DAT*
+ntuser.dat*
