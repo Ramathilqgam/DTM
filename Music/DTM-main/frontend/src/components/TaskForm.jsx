@@ -1,16 +1,14 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../api/axiosConfig";
 
 export default function TaskForm({ onTaskCreated, initialData = null, onClose }) {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    assigned_to: "",
     priority: "medium",
     due_date: "",
     status: "pending",
   });
-  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -19,25 +17,12 @@ export default function TaskForm({ onTaskCreated, initialData = null, onClose })
       setFormData({
         title: initialData.title,
         description: initialData.description,
-        assigned_to: initialData.assigned_to,
         priority: initialData.priority,
         due_date: initialData.due_date ? initialData.due_date.split("T")[0] : "",
         status: initialData.status,
       });
     }
-
-    // Fetch users for assignment
-    fetchUsers();
   }, [initialData]);
-
-  const fetchUsers = async () => {
-    try {
-      const response = await axios.get("/api/auth/users");
-      setUsers(response.data);
-    } catch (err) {
-      console.error("Failed to fetch users:", err);
-    }
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -50,22 +35,15 @@ export default function TaskForm({ onTaskCreated, initialData = null, onClose })
     setError("");
 
     try {
-      const token = localStorage.getItem("access_token");
-      const headers = { Authorization: `Bearer ${token}` };
-
       if (initialData) {
-        // Update existing task
-        const { assigned_to, ...updateData } = formData;
-        await axios.put(`/api/tasks/${initialData.id}`, updateData, { headers });
+        await api.put(`/tasks/${initialData.id}`, formData);
       } else {
-        // Create new task
-        await axios.post("/api/tasks", formData, { headers });
+        await api.post("/tasks", formData);
       }
 
       setFormData({
         title: "",
         description: "",
-        assigned_to: "",
         priority: "medium",
         due_date: "",
         status: "pending",
@@ -80,22 +58,22 @@ export default function TaskForm({ onTaskCreated, initialData = null, onClose })
     }
   };
 
-  return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 max-w-md w-full">
-      <h2 className="text-xl font-semibold mb-4 text-white">
-        {initialData ? "Edit Task" : "Create New Task"}
-      </h2>
+  const priorityEmojis = { low: "🟢", medium: "🟡", high: "🔴" };
+  const statusEmojis = { pending: "⏳", in_progress: "🚀", completed: "✅" };
 
+  return (
+    <div className="w-full max-w-2xl">
       {error && (
-        <div className="bg-red-900/30 border border-red-700 rounded p-3 mb-4 text-red-200 text-sm">
-          {error}
+        <div className="mb-6 p-4 rounded-xl bg-red-950/40 border border-red-700/50 text-red-200">
+          <p className="font-semibold">⚠️ {error}</p>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Title */}
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-1">
-            Title
+          <label className="block text-sm font-semibold text-white mb-2">
+            📝 Task Title
           </label>
           <input
             type="text"
@@ -103,111 +81,100 @@ export default function TaskForm({ onTaskCreated, initialData = null, onClose })
             value={formData.title}
             onChange={handleChange}
             required
-            placeholder="Task title"
-            className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
+            placeholder="Enter task title"
+            className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:bg-zinc-800 transition-all"
           />
         </div>
 
+        {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-1">
-            Description
+          <label className="block text-sm font-semibold text-white mb-2">
+            📋 Description
           </label>
           <textarea
             name="description"
             value={formData.description}
             onChange={handleChange}
-            placeholder="Task description"
-            rows="3"
-            className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
+            placeholder="Add task details..."
+            rows="4"
+            className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:bg-zinc-800 transition-all resize-none"
           />
         </div>
 
-        {!initialData && (
+        {/* Priority & Status Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-1">
-              Assign To
-            </label>
-            <select
-              name="assigned_to"
-              value={formData.assigned_to}
-              onChange={handleChange}
-              required={!initialData}
-              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white focus:outline-none focus:border-indigo-500"
-            >
-              <option value="">Select a user</option>
-              {users.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-1">
-              Priority
+            <label className="block text-sm font-semibold text-white mb-2">
+              {priorityEmojis[formData.priority]} Priority
             </label>
             <select
               name="priority"
               value={formData.priority}
               onChange={handleChange}
-              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white focus:outline-none focus:border-indigo-500"
+              className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white focus:outline-none focus:border-indigo-500 focus:bg-zinc-800 transition-all"
             >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
+              <option value="low">🟢 Low</option>
+              <option value="medium">🟡 Medium</option>
+              <option value="high">🔴 High</option>
             </select>
           </div>
 
           {initialData && (
             <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-1">
-                Status
+              <label className="block text-sm font-semibold text-white mb-2">
+                {statusEmojis[formData.status]} Status
               </label>
               <select
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white focus:outline-none focus:border-indigo-500"
+                className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white focus:outline-none focus:border-indigo-500 focus:bg-zinc-800 transition-all"
               >
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
+                <option value="pending">⏳ Pending</option>
+                <option value="in_progress">🚀 In Progress</option>
+                <option value="completed">✅ Completed</option>
               </select>
             </div>
           )}
         </div>
 
+        {/* Due Date */}
         <div>
-          <label className="block text-sm font-medium text-zinc-300 mb-1">
-            Due Date
+          <label className="block text-sm font-semibold text-white mb-2">
+            📅 Due Date
           </label>
           <input
             type="date"
             name="due_date"
             value={formData.due_date}
             onChange={handleChange}
-            className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white focus:outline-none focus:border-indigo-500"
+            className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white focus:outline-none focus:border-indigo-500 focus:bg-zinc-800 transition-all"
           />
         </div>
 
-        <div className="flex gap-2 pt-2">
+        {/* Buttons */}
+        <div className="flex gap-3 pt-4">
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-600 text-white font-medium py-2 rounded transition-colors"
+            className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-indigo-500/50"
           >
-            {loading ? "Saving..." : initialData ? "Update Task" : "Create Task"}
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Saving...
+              </span>
+            ) : (
+              initialData ? "💾 Update Task" : "✨ Create Task"
+            )}
           </button>
           {onClose && (
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded transition-colors"
+              className="px-6 py-3 bg-zinc-800/50 hover:bg-zinc-700 border border-zinc-700/50 text-white font-semibold rounded-xl transition-all duration-300"
             >
-              Cancel
+              ✕ Cancel
             </button>
           )}
         </div>
