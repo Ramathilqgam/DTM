@@ -1,0 +1,6 @@
+/* Import dark mode styles */
+@import './styles/dark-mode.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

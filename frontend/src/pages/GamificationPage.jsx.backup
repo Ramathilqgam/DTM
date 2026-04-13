@@ -1,0 +1,375 @@
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import api from '../api/axiosConfig';
+
+export default function GamificationPage() {
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('achievements');
+  const [achievements, setAchievements] = useState({ unlocked: [], locked: [] });
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [profile, setProfile] = useState(null);
+  const [rewards, setRewards] = useState([]);
+  const [streak, setStreak] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchGamificationData();
+  }, []);
+
+  const fetchGamificationData = async () => {
+    try {
+      const [achievementsRes, leaderboardRes, profileRes, rewardsRes, streakRes] = await Promise.all([
+        api.get('/gamification/achievements'),
+        api.get('/gamification/leaderboard'),
+        api.get('/gamification/profile'),
+        api.get('/gamification/rewards'),
+        api.get('/gamification/streak')
+      ]);
+
+      setAchievements(achievementsRes.data);
+      setLeaderboard(leaderboardRes.data.leaderboard || []);
+      setProfile(profileRes.data);
+      setRewards(rewardsRes.data.rewards || []);
+      setStreak(streakRes.data);
+    } catch (error) {
+      console.error('Error fetching gamification data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const claimReward = async (rewardId) => {
+    try {
+      await api.post('/gamification/claim-reward', { reward_id: rewardId });
+      // Refresh data after claiming
+      fetchGamificationData();
+    } catch (error) {
+      console.error('Error claiming reward:', error);
+    }
+  };
+
+  const getLevelColor = (level) => {
+    const colors = {
+      1: 'from-gray-600 to-gray-700',
+      2: 'from-green-600 to-green-700',
+      3: 'from-blue-600 to-blue-700',
+      4: 'from-purple-600 to-purple-700',
+      5: 'from-orange-600 to-orange-700',
+      6: 'from-red-600 to-red-700',
+      7: 'from-yellow-600 to-yellow-700',
+      8: 'from-pink-600 to-pink-700'
+    };
+    return colors[level] || 'from-gray-600 to-gray-700';
+  };
+
+  const getCategoryColor = (category) => {
+    const colors = {
+      milestone: 'from-blue-600 to-blue-700',
+      performance: 'from-green-600 to-green-700',
+      learning: 'from-purple-600 to-purple-700',
+      collaboration: 'from-orange-600 to-orange-700',
+      consistency: 'from-red-600 to-red-700',
+      time: 'from-yellow-600 to-yellow-700',
+      quality: 'from-pink-600 to-pink-700'
+    };
+    return colors[category] || 'from-gray-600 to-gray-700';
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0f]">
+        <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0f] via-[#1a0a2e] to-[#16213e] text-white">
+      {/* Header */}
+      <div className="border-b border-zinc-800/50 backdrop-blur-xl bg-black/20">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-600 flex items-center justify-center text-xl font-bold">
+                🏆
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Gamification & Achievements</h1>
+                <p className="text-sm text-gray-400">Earn points, unlock achievements, and climb the leaderboard!</p>
+              </div>
+            </div>
+            <nav className="flex items-center gap-6">
+              <Link to="/dashboard" className="text-zinc-400 hover:text-white transition-colors">
+                Dashboard
+              </Link>
+              <Link to="/tasks" className="text-zinc-400 hover:text-white transition-colors">
+                Tasks
+              </Link>
+              <Link to="/ai-assistant" className="text-zinc-400 hover:text-white transition-colors">
+                AI Assistant
+              </Link>
+              <Link to="/skill-development" className="text-zinc-400 hover:text-white transition-colors">
+                Skills
+              </Link>
+            </nav>
+          </div>
+        </div>
+      </div>
+
+      {/* User Profile Summary */}
+      {profile && (
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="bg-gradient-to-r from-indigo-900/30 to-purple-900/30 border border-indigo-700/30 rounded-2xl p-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className={`w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br ${getLevelColor(profile.user.level)} flex items-center justify-center text-3xl font-bold mb-3`}>
+                  {profile.user.level}
+                </div>
+                <h3 className="text-lg font-semibold text-white">{profile.user.level_name}</h3>
+                <p className="text-sm text-zinc-400">{profile.user.current_points} points</p>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-zinc-400">Tasks Completed</span>
+                  <span className="text-white font-semibold">{profile.stats.tasks_completed}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-400">Completion Rate</span>
+                  <span className="text-green-400 font-semibold">{profile.stats.completion_rate}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-400">Current Streak</span>
+                  <span className="text-orange-400 font-semibold">{profile.stats.current_streak} days</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-400">Achievements</span>
+                  <span className="text-purple-400 font-semibold">{profile.stats.achievements_unlocked}/{profile.stats.total_achievements}</span>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-zinc-400">Points This Week</span>
+                  <span className="text-blue-400 font-semibold">+{profile.stats.points_this_week}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-400">Points This Month</span>
+                  <span className="text-indigo-400 font-semibold">+{profile.stats.points_this_month}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-400">Longest Streak</span>
+                  <span className="text-red-400 font-semibold">{profile.stats.longest_streak} days</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex gap-1 mb-8 bg-zinc-900/50 p-1 rounded-xl">
+            {['achievements', 'leaderboard', 'rewards', 'streak'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all ${
+                  activeTab === tab
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+                }`}
+              >
+                {tab === 'achievements' && '🏆 Achievements'}
+                {tab === 'leaderboard' && '🥇 Leaderboard'}
+                {tab === 'rewards' && '🎁 Rewards'}
+                {tab === 'streak' && '🔥 Streak'}
+              </button>
+            ))}
+          </div>
+
+          {/* Content */}
+          <>
+            {activeTab === 'achievements' && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Unlocked Achievements */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-4">🏆 Unlocked ({achievements.total_unlocked})</h3>
+                  <div className="space-y-3">
+                    {achievements.unlocked.map((achievement) => (
+                      <div key={achievement.id} className="bg-zinc-900 border border-zinc-700 rounded-xl p-4 flex items-center gap-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-lg flex items-center justify-center text-2xl">
+                          {achievement.icon}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-white font-semibold">{achievement.name}</h4>
+                          <p className="text-sm text-zinc-400">{achievement.description}</p>
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="text-xs text-zinc-500">Unlocked {new Date(achievement.unlocked_at).toLocaleDateString()}</div>
+                            <span className="text-xs text-green-400 font-semibold">+{achievement.points} pts</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Locked Achievements */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-4">🔒 Locked ({achievements.locked.length})</h3>
+                  <div className="space-y-3">
+                    {achievements.locked.map((achievement) => (
+                      <div key={achievement.id} className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-4 flex items-center gap-4 opacity-75">
+                        <div className="w-12 h-12 bg-zinc-800 rounded-lg flex items-center justify-center text-2xl grayscale">
+                          {achievement.icon}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-zinc-300 font-semibold">{achievement.name}</h4>
+                          <p className="text-sm text-zinc-500">{achievement.description}</p>
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="flex-1">
+                              <div className="w-full bg-zinc-700 rounded-full h-2">
+                                <div 
+                                  className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-300"
+                                  style={{ width: `${achievement.progress}%` }}
+                                />
+                              </div>
+                            </div>
+                            <span className="text-xs text-zinc-500 font-semibold">{achievement.progress}%</span>
+                            <span className="text-xs text-zinc-500 font-semibold">+{achievement.points} pts</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'leaderboard' && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-white mb-6">🥇 Global Leaderboard</h3>
+              <div className="space-y-4">
+                {leaderboard.map((entry, index) => (
+                  <div key={entry.user.id} className={`bg-zinc-900 border rounded-xl p-6 ${
+                    entry.user.id === user?.id ? 'border-indigo-600 bg-indigo-900/20' : 'border-zinc-800'
+                  }`}>
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
+                        index === 0 ? 'bg-yellow-600 text-white' :
+                        index === 1 ? 'bg-gray-400 text-white' :
+                        index === 2 ? 'bg-orange-600 text-white' :
+                        'bg-zinc-700 text-white'
+                      }`}>
+                        {index + 1}
+                      </div>
+                      <div className="w-12 h-12 bg-zinc-700 rounded-full flex items-center justify-center text-sm font-bold">
+                        {entry.user.avatar}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-white font-semibold">{entry.user.name}</h4>
+                          <div className="text-right">
+                            <span className={`text-lg font-bold ${
+                              index === 0 ? 'text-yellow-400' :
+                              index === 1 ? 'text-gray-400' :
+                              index === 2 ? 'text-orange-400' :
+                              'text-zinc-400'
+                            }`}>
+                              {entry.total_points}
+                            </span>
+                            <span className="text-xs text-zinc-500">pts</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 mt-2 text-sm text-zinc-400">
+                          <span>Level {entry.user.level} {entry.user.level_name}</span>
+                          <span>{entry.tasks_completed} tasks</span>
+                          <span>🔥 {entry.streak_days} day streak</span>
+                          <span>🏆 {entry.achievements} achievements</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'rewards' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-white">🎁 Rewards Store</h3>
+                <div className="text-right">
+                  <span className="text-zinc-400">Your Points:</span>
+                  <span className="text-2xl font-bold text-green-400 ml-2">{rewards.user_points}</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {rewards.rewards.map((reward) => (
+                  <div key={reward.id} className={`bg-zinc-900 border rounded-xl p-6 ${
+                    reward.can_afford ? 'border-green-600/50' : 'border-zinc-800 opacity-75'
+                  }`}>
+                    <div className="text-center mb-4">
+                      <div className="w-16 h-16 bg-zinc-800 rounded-xl flex items-center justify-center text-2xl mb-3">
+                        {reward.icon}
+                      </div>
+                      <h4 className="text-white font-semibold">{reward.name}</h4>
+                    </div>
+                    <p className="text-sm text-zinc-400 mb-4">{reward.description}</p>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-sm font-semibold ${
+                        reward.can_afford ? 'text-green-400' : 'text-zinc-500'
+                      }`}>
+                        {reward.cost} points
+                      </span>
+                      <button
+                        onClick={() => claimReward(reward.id)}
+                        disabled={!reward.can_afford || reward.claimed}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                          reward.can_afford && !reward.claimed
+                            ? 'bg-green-600 hover:bg-green-500 text-white'
+                            : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                        }`}
+                      >
+                        {reward.claimed ? 'Claimed' : reward.can_afford ? 'Claim' : 'Insufficient Points'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'streak' && streak && (
+            <div className="space-y-6">
+              <div className="bg-gradient-to-r from-red-900/30 to-orange-900/30 border border-red-700/30 rounded-2xl p-8 text-center">
+                <div className={`w-24 h-24 mx-auto bg-gradient-to-br from-orange-600 to-red-600 rounded-full flex items-center justify-center text-4xl font-bold mb-4`}>
+                  🔥
+                </div>
+                <h2 className="text-3xl font-bold text-white mb-2">{streak.current_streak} Day Streak!</h2>
+                <p className="text-zinc-300 mb-6">Keep it going! Complete at least {streak.tasks_needed_today} tasks today to maintain your streak.</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-green-400">{streak.tasks_today}</div>
+                    <div className="text-sm text-zinc-400">Tasks Today</div>
+                    <div className="text-sm text-zinc-500">Goal: {streak.tasks_needed_today}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-orange-400">{streak.longest_streak}</div>
+                    <div className="text-sm text-zinc-400">Longest Streak</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-red-400">{streak.streak_history.filter(s => s.maintained).length}</div>
+                    <div className="text-sm text-zinc-400">Days Maintained</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          </>
+        </div>
+      </div>
+    </div>
+  );
+}

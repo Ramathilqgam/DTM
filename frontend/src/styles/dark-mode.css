@@ -1,0 +1,440 @@
+/* Dark Mode Styles for DTMS Application */
+
+/* Base Dark Mode Variables */
+:root {
+  /* Light mode colors (default) */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-tertiary: #94a3b8;
+  --border-primary: #e2e8f0;
+  --border-secondary: #cbd5e1;
+  --accent-primary: #3b82f6;
+  --accent-secondary: #10b981;
+  --accent-danger: #ef4444;
+  --accent-warning: #f59e0b;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+}
+
+/* Dark mode variables */
+.dark {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --border-primary: #334155;
+  --border-secondary: #475569;
+  --accent-primary: #60a5fa;
+  --accent-secondary: #34d399;
+  --accent-danger: #f87171;
+  --accent-warning: #fbbf24;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+}
+
+/* System preference detection */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-tertiary: #94a3b8;
+    --border-primary: #334155;
+    --border-secondary: #475569;
+    --accent-primary: #60a5fa;
+    --accent-secondary: #34d399;
+    --accent-danger: #f87171;
+    --accent-warning: #fbbf24;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+  }
+}
+
+/* Apply CSS variables to common elements */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Background utilities */
+.bg-primary {
+  background-color: var(--bg-primary);
+}
+
+.bg-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.bg-tertiary {
+  background-color: var(--bg-tertiary);
+}
+
+/* Text color utilities */
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-tertiary {
+  color: var(--text-tertiary);
+}
+
+/* Border utilities */
+.border-primary {
+  border-color: var(--border-primary);
+}
+
+.border-secondary {
+  border-color: var(--border-secondary);
+}
+
+/* Accent colors */
+.accent-primary {
+  color: var(--accent-primary);
+}
+
+.accent-secondary {
+  color: var(--accent-secondary);
+}
+
+.accent-danger {
+  color: var(--accent-danger);
+}
+
+.accent-warning {
+  color: var(--accent-warning);
+}
+
+/* Shadow utilities */
+.shadow-sm {
+  box-shadow: var(--shadow-sm);
+}
+
+.shadow-md {
+  box-shadow: var(--shadow-md);
+}
+
+.shadow-lg {
+  box-shadow: var(--shadow-lg);
+}
+
+/* Component-specific dark mode styles */
+
+/* Cards */
+.card {
+  background-color: var(--bg-primary);
+  border-color: var(--border-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* Forms */
+.input {
+  background-color: var(--bg-primary);
+  border-color: var(--border-primary);
+  color: var(--text-primary);
+}
+
+.input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
+}
+
+.dark .input:focus {
+  box-shadow: 0 0 0 3px rgb(96 165 250 / 0.2);
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: var(--accent-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-primary);
+  filter: brightness(1.1);
+}
+
+.btn-secondary {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-primary);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  background-color: var(--bg-tertiary);
+}
+
+/* Navigation */
+.navbar {
+  background-color: var(--bg-primary);
+  border-color: var(--border-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Sidebar */
+.sidebar {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-primary);
+}
+
+/* Tables */
+.table {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.table th {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-primary);
+}
+
+.table td {
+  border-color: var(--border-primary);
+}
+
+.table tr:hover {
+  background-color: var(--bg-secondary);
+}
+
+/* Modals */
+.modal {
+  background-color: var(--bg-primary);
+  border-color: var(--border-primary);
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-overlay {
+  background-color: rgb(0 0 0 / 0.5);
+}
+
+/* Dropdowns */
+.dropdown {
+  background-color: var(--bg-primary);
+  border-color: var(--border-primary);
+  box-shadow: var(--shadow-lg);
+}
+
+.dropdown-item {
+  color: var(--text-primary);
+}
+
+.dropdown-item:hover {
+  background-color: var(--bg-secondary);
+}
+
+/* Tabs */
+.tab-active {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.tab-inactive {
+  color: var(--text-secondary);
+}
+
+.tab-inactive:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+}
+
+/* Progress bars */
+.progress {
+  background-color: var(--bg-tertiary);
+}
+
+.progress-bar {
+  background-color: var(--accent-primary);
+}
+
+/* Alerts */
+.alert-info {
+  background-color: rgb(59 130 246 / 0.1);
+  border-color: rgb(59 130 246 / 0.2);
+  color: var(--accent-primary);
+}
+
+.alert-success {
+  background-color: rgb(16 185 129 / 0.1);
+  border-color: rgb(16 185 129 / 0.2);
+  color: var(--accent-secondary);
+}
+
+.alert-warning {
+  background-color: rgb(245 158 11 / 0.1);
+  border-color: rgb(245 158 11 / 0.2);
+  color: var(--accent-warning);
+}
+
+.alert-danger {
+  background-color: rgb(239 68 68 / 0.1);
+  border-color: rgb(239 68 68 / 0.2);
+  color: var(--accent-danger);
+}
+
+/* Badges */
+.badge {
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.badge-primary {
+  background-color: var(--accent-primary);
+  color: white;
+}
+
+/* Charts and graphs */
+.chart-container {
+  background-color: var(--bg-primary);
+  border-color: var(--border-primary);
+}
+
+.chart-grid {
+  stroke: var(--border-secondary);
+}
+
+.chart-axis {
+  stroke: var(--text-tertiary);
+}
+
+/* Calendar */
+.calendar-day {
+  background-color: var(--bg-primary);
+  border-color: var(--border-primary);
+  color: var(--text-primary);
+}
+
+.calendar-day:hover {
+  background-color: var(--bg-secondary);
+}
+
+.calendar-today {
+  background-color: var(--accent-primary);
+  color: white;
+}
+
+.calendar-weekend {
+  background-color: var(--bg-secondary);
+}
+
+/* Code blocks */
+.code {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-primary);
+  color: var(--text-primary);
+}
+
+.code-inline {
+  background-color: var(--bg-tertiary);
+  color: var(--accent-primary);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-secondary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* Dark mode specific improvements */
+.dark {
+  /* Reduce blue light in dark mode */
+  filter: brightness(0.95) contrast(1.05);
+}
+
+.dark img {
+  filter: brightness(0.9) contrast(1.1);
+}
+
+.dark .text-white {
+  color: var(--text-primary);
+}
+
+.dark .bg-white {
+  background-color: var(--bg-primary);
+}
+
+.dark .bg-gray-50 {
+  background-color: var(--bg-secondary);
+}
+
+.dark .bg-gray-100 {
+  background-color: var(--bg-tertiary);
+}
+
+.dark .text-gray-900 {
+  color: var(--text-primary);
+}
+
+.dark .text-gray-800 {
+  color: var(--text-primary);
+}
+
+.dark .text-gray-700 {
+  color: var(--text-secondary);
+}
+
+.dark .text-gray-600 {
+  color: var(--text-secondary);
+}
+
+.dark .text-gray-500 {
+  color: var(--text-tertiary);
+}
+
+.dark .border-gray-200 {
+  border-color: var(--border-primary);
+}
+
+.dark .border-gray-300 {
+  border-color: var(--border-primary);
+}
+
+/* Smooth transitions for theme switching */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Print styles */
+@media print {
+  .dark {
+    filter: none !important;
+  }
+  
+  .dark * {
+    color: black !important;
+    background-color: white !important;
+    border-color: black !important;
+  }
+}
