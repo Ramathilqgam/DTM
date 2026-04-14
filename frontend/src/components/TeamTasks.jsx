@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import api from '../api/axiosConfig';
+import CreateTeamForm from './CreateTeamForm';
+import CreateTeamTaskForm from './CreateTeamTaskForm';
 
 const TeamTasks = () => {
   const { user } = useAuth();
@@ -622,19 +624,6 @@ const TeamTasks = () => {
                     ))}
                   </div>
                 </div>
-
-                {/* Category Breakdown */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Task Categories</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {Object.entries(teamAnalytics.category_breakdown).map(([category, count]) => (
-                      <div key={category} className="text-center p-4 bg-gray-50 rounded-lg">
-                        <div className="text-lg font-bold text-gray-600">{count}</div>
-                        <p className="text-sm text-gray-500 capitalize">{category}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
               </div>
             )}
 
@@ -675,64 +664,35 @@ const TeamTasks = () => {
 
       {/* Create Team Modal */}
       {showCreateTeamForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-800">Create New Team</h3>
-              <button
-                onClick={() => setShowCreateTeamForm(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                close
-              </button>
-            </div>
-
-            <TeamForm
-              onSubmit={handleCreateTeam}
-              onCancel={() => setShowCreateTeamForm(false)}
-            />
-          </div>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <CreateTeamForm
+            onTeamCreated={handleCreateTeam}
+            onClose={() => setShowCreateTeamForm(false)}
+          />
         </div>
       )}
 
       {/* Create/Edit Task Modal */}
       {(showCreateTaskForm || editingTask) && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-800">
-                {editingTask ? 'Edit Task' : 'Create New Task'}
-              </h3>
-              <button
-                onClick={() => {
-                  setShowCreateTaskForm(false);
-                  setEditingTask(null);
-                }}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                close
-              </button>
-            </div>
-
-            <TeamTaskForm
-              task={editingTask}
-              teamMembers={teamMembers}
-              onSubmit={editingTask ? 
-                (data) => handleUpdateTeamTask(editingTask.id, data) : 
-                handleCreateTeamTask
-              }
-              onCancel={() => {
-                setShowCreateTaskForm(false);
-                setEditingTask(null);
-              }}
-            />
-          </div>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <CreateTeamTaskForm
+            initialData={editingTask}
+            onTaskCreated={editingTask ? 
+              (data) => handleUpdateTeamTask(editingTask.id, data) : 
+              handleCreateTeamTask
+            }
+            teamMembers={teamMembers}
+            onClose={() => {
+              setShowCreateTaskForm(false);
+              setEditingTask(null);
+            }}
+          />
         </div>
       )}
 
       {/* Task Detail Modal */}
       {selectedTask && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-gray-800">Task Details</h3>
@@ -744,12 +704,61 @@ const TeamTasks = () => {
               </button>
             </div>
 
-            <TaskDetail
-              task={selectedTask}
-              teamMembers={teamMembers}
-              onAddComment={handleAddComment}
-              onClose={() => setSelectedTask(null)}
-            />
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold text-gray-800">{selectedTask.title}</h4>
+                <p className="text-gray-600">{selectedTask.description}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-sm text-gray-500">Status:</span>
+                  <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
+                    {selectedTask.status}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-500">Priority:</span>
+                  <span className="ml-2 px-2 py-1 bg-red-100 text-red-800 rounded text-xs">
+                    {selectedTask.priority}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <h5 className="font-medium text-gray-800 mb-2">Comments</h5>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {selectedTask.comments?.map((comment) => (
+                    <div key={comment.id} className="text-sm bg-gray-50 p-2 rounded">
+                      <span className="font-medium text-gray-700">
+                        {comment.type === 'system' ? 'System' : 'User'}:
+                      </span>
+                      <span className="text-gray-600 ml-2">{comment.content}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Add a comment..."
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && e.target.value.trim()) {
+                      handleAddComment(selectedTask.id, { content: e.target.value });
+                      e.target.value = '';
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => setSelectedTask(null)}
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -766,463 +775,6 @@ const TeamTasks = () => {
           >
             Refresh
           </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Team Form Component
-const TeamForm = ({ onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    allow_member_invites: true,
-    require_approval: false,
-    default_task_visibility: 'team',
-    enable_analytics: true
-  });
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('TeamForm - Submitting form with data:', formData);
-    
-    // Validate required fields
-    if (!formData.name.trim()) {
-      alert('Team name is required');
-      return;
-    }
-    
-    if (!formData.description.trim()) {
-      alert('Description is required');
-      return;
-    }
-    
-    console.log('TeamForm - Form validation passed, calling onSubmit');
-    onSubmit(formData);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Team Name *</label>
-        <input
-          type="text"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          required
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
-        <textarea
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          rows={3}
-          required
-        />
-      </div>
-
-      <div className="space-y-3">
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            checked={formData.allow_member_invites}
-            onChange={(e) => setFormData({ ...formData, allow_member_invites: e.target.checked })}
-            className="w-4 h-4 text-blue-600 rounded"
-          />
-          <label className="text-sm font-medium text-gray-700">Allow members to invite others</label>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            checked={formData.require_approval}
-            onChange={(e) => setFormData({ ...formData, require_approval: e.target.checked })}
-            className="w-4 h-4 text-blue-600 rounded"
-          />
-          <label className="text-sm font-medium text-gray-700">Require approval for new members</label>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            checked={formData.enable_analytics}
-            onChange={(e) => setFormData({ ...formData, enable_analytics: e.target.checked })}
-            className="w-4 h-4 text-blue-600 rounded"
-          />
-          <label className="text-sm font-medium text-gray-700">Enable team analytics</label>
-        </div>
-      </div>
-
-      <div className="flex gap-3 pt-4">
-        <button
-          type="submit"
-          className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
-        >
-          Create Team
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300 transition-colors"
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
-  );
-};
-
-// Team Task Form Component
-const TeamTaskForm = ({ task, teamMembers, onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState({
-    title: task?.title || '',
-    description: task?.description || '',
-    collaboration_type: task?.collaboration_type || 'individual',
-    assigned_to: task?.assigned_to || [],
-    priority: task?.priority || 'medium',
-    category: task?.category || 'general',
-    estimated_duration: task?.estimated_duration || 30,
-    tags: task?.tags || [],
-    due_date: task?.due_date || ''
-  });
-
-  const collaborationTypes = [
-    { value: 'individual', label: 'Individual' },
-    { value: 'collaborative', label: 'Collaborative' },
-    { value: 'review_required', label: 'Review Required' },
-    { value: 'parallel', label: 'Parallel' },
-    { value: 'sequential', label: 'Sequential' }
-  ];
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('TeamTaskForm - Submitting form with data:', formData);
-    
-    // Validate required fields
-    if (!formData.title.trim()) {
-      alert('Task title is required');
-      return;
-    }
-    
-    if (!formData.collaboration_type) {
-      alert('Collaboration type is required');
-      return;
-    }
-    
-    console.log('TeamTaskForm - Form validation passed, calling onSubmit');
-    onSubmit(formData);
-  };
-
-  const handleMemberToggle = (memberId) => {
-    setFormData({
-      ...formData,
-      assigned_to: formData.assigned_to.includes(memberId)
-        ? formData.assigned_to.filter(id => id !== memberId)
-        : [...formData.assigned_to, memberId]
-    });
-  };
-
-  const handleTagAdd = (tag) => {
-    if (tag && !formData.tags.includes(tag)) {
-      setFormData({
-        ...formData,
-        tags: [...formData.tags, tag]
-      });
-    }
-  };
-
-  const handleTagRemove = (tag) => {
-    setFormData({
-      ...formData,
-      tags: formData.tags.filter(t => t !== tag)
-    });
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Task Title *</label>
-        <input
-          type="text"
-          value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          required
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-        <textarea
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          rows={3}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Collaboration Type *</label>
-          <select
-            value={formData.collaboration_type}
-            onChange={(e) => setFormData({ ...formData, collaboration_type: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          >
-            {collaborationTypes.map(type => (
-              <option key={type.value} value={type.value}>{type.label}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-          <select
-            value={formData.priority}
-            onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          >
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-          <select
-            value={formData.category}
-            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          >
-            <option value="general">General</option>
-            <option value="development">Development</option>
-            <option value="design">Design</option>
-            <option value="testing">Testing</option>
-            <option value="documentation">Documentation</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
-          <input
-            type="date"
-            value={formData.due_date}
-            onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Duration (minutes)</label>
-        <input
-          type="number"
-          min="1"
-          value={formData.estimated_duration}
-          onChange={(e) => setFormData({ ...formData, estimated_duration: parseInt(e.target.value) })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Assign to Team Members</label>
-        <div className="flex flex-wrap gap-2">
-          {teamMembers.map(member => (
-            <button
-              key={member.user_id}
-              type="button"
-              onClick={() => handleMemberToggle(member.user_id)}
-              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                formData.assigned_to.includes(member.user_id)
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              {member.name}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
-        <div className="flex flex-wrap gap-2 mb-2">
-          {formData.tags.map((tag, index) => (
-            <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm flex items-center gap-1">
-              {tag}
-              <button
-                type="button"
-                onClick={() => handleTagRemove(tag)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ×
-              </button>
-            </span>
-          ))}
-        </div>
-        <input
-          type="text"
-          placeholder="Add tag and press Enter"
-          onKeyPress={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              handleTagAdd(e.target.value.trim());
-              e.target.value = '';
-            }
-          }}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-        />
-      </div>
-
-      <div className="flex gap-3 pt-4">
-        <button
-          type="submit"
-          className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
-        >
-          {task ? 'Update' : 'Create'} Task
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300 transition-colors"
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
-  );
-};
-
-// Task Detail Component
-const TaskDetail = ({ task, teamMembers, onAddComment, onClose }) => {
-  const [newComment, setNewComment] = useState('');
-
-  const handleSubmitComment = (e) => {
-    e.preventDefault();
-    if (newComment.trim()) {
-      onAddComment(task.id, { content: newComment.trim() });
-      setNewComment('');
-    }
-  };
-
-  const getMemberName = (userId) => {
-    const member = teamMembers.find(m => m.user_id === userId);
-    return member ? member.name : 'Unknown User';
-  };
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <div className="flex items-center gap-3 mb-4">
-          <h3 className="text-lg font-bold text-gray-800">{task.title}</h3>
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-            task.collaboration_type === 'individual' ? 'bg-blue-100 text-blue-800' :
-            task.collaboration_type === 'collaborative' ? 'bg-green-100 text-green-800' :
-            task.collaboration_type === 'review_required' ? 'bg-orange-100 text-orange-800' :
-            task.collaboration_type === 'parallel' ? 'bg-purple-100 text-purple-800' :
-            'bg-red-100 text-red-800'
-          }`}>
-            {task.collaboration_type.replace('_', ' ').title()}
-          </span>
-        </div>
-        
-        <p className="text-gray-600 mb-4">{task.description}</p>
-        
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <span className="font-medium text-gray-700">Status:</span>
-            <span className="ml-2">{task.status.replace('_', ' ').title()}</span>
-          </div>
-          <div>
-            <span className="font-medium text-gray-700">Priority:</span>
-            <span className="ml-2">{task.priority}</span>
-          </div>
-          <div>
-            <span className="font-medium text-gray-700">Progress:</span>
-            <span className="ml-2">{task.progress}%</span>
-          </div>
-          <div>
-            <span className="font-medium text-gray-700">Category:</span>
-            <span className="ml-2">{task.category}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Progress Bar */}
-      <div>
-        <h4 className="font-medium text-gray-700 mb-2">Progress</h4>
-        <div className="w-full bg-gray-200 rounded-full h-3">
-          <div
-            className="bg-blue-600 h-3 rounded-full transition-all duration-300"
-            style={{ width: `${task.progress}%` }}
-          ></div>
-        </div>
-      </div>
-
-      {/* Assigned Members */}
-      {task.assigned_to && task.assigned_to.length > 0 && (
-        <div>
-          <h4 className="font-medium text-gray-700 mb-2">Assigned To</h4>
-          <div className="flex flex-wrap gap-2">
-            {task.assigned_to.map(memberId => (
-              <span key={memberId} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                {getMemberName(memberId)}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Comments */}
-      <div>
-        <h4 className="font-medium text-gray-700 mb-4">Comments ({task.comments?.length || 0})</h4>
-        
-        {/* Add Comment */}
-        <form onSubmit={handleSubmitComment} className="mb-4">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Add a comment..."
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
-            >
-              Add
-            </button>
-          </div>
-        </form>
-
-        {/* Comments List */}
-        <div className="space-y-3">
-          {task.comments?.map(comment => (
-            <div key={comment.id} className="border-l-4 border-blue-200 pl-4">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="font-medium text-gray-800">
-                  {comment.type === 'system' ? 'System' : getMemberName(comment.user_id)}
-                </span>
-                <span className="text-sm text-gray-500">
-                  {new Date(comment.created_at).toLocaleString()}
-                </span>
-              </div>
-              <p className="text-gray-600">{comment.content}</p>
-            </div>
-          ))}
-          
-          {(!task.comments || task.comments.length === 0) && (
-            <p className="text-gray-500 text-center py-4">No comments yet</p>
-          )}
         </div>
       </div>
     </div>
