@@ -23,8 +23,9 @@ def create_app():
     mail = Mail(app)
 
     # CORS
+    frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
     CORS(app, resources={r"/api/*": {
-        "origins": "*",
+        "origins": [frontend_url, "http://localhost:5173", "https://frontend-ap1v69zb0-ramathilagam1819-9321s-projects.vercel.app"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"]
     }})
