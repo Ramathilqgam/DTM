@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: dtm-backend
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python run.py
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: MONGO_URI
+        value: mongodb+srv://ram:ram123@cluster0.abcd.mongodb.net/digital_talent_db?retryWrites=true&w=majority
+      - key: FRONTEND_URL
+        value: https://frontend-ap1v69zb0-ramathilagam1819-9321s-projects.vercel.app
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        value: https://your-app-name.onrender.com/api/auth/google/callback
+      - key: MAIL_SERVER
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USE_TLS
+        value: "true"
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_DEFAULT_SENDER
+        sync: false
+    healthCheckPath: /api/health
+    healthCheckTimeout: 100
+    autoDeploy: true

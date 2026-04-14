@@ -1,0 +1,77 @@
+{
+  "name": "DTM Backend",
+  "description": "Digital Talent Management Backend API",
+  "keywords": ["api", "backend", "flask", "talent-management"],
+  "website": "https://github.com/Ramathilqgam/DTM",
+  "repository": "https://github.com/Ramathilqgam/DTM.git",
+  "logo": "https://nodejs.org/static/images/logo-hexagon.png",
+  "success_url": "/",
+  "env": {
+    "FLASK_ENV": {
+      "description": "Flask environment",
+      "value": "production"
+    },
+    "SECRET_KEY": {
+      "description": "Flask secret key for sessions",
+      "generator": "secret"
+    },
+    "JWT_SECRET_KEY": {
+      "description": "JWT secret key for authentication",
+      "generator": "secret"
+    },
+    "MONGO_URI": {
+      "description": "MongoDB connection string",
+      "required": true
+    },
+    "FRONTEND_URL": {
+      "description": "Frontend application URL",
+      "required": true
+    },
+    "GOOGLE_CLIENT_ID": {
+      "description": "Google OAuth client ID",
+      "required": false
+    },
+    "GOOGLE_CLIENT_SECRET": {
+      "description": "Google OAuth client secret",
+      "required": false
+    },
+    "GOOGLE_REDIRECT_URI": {
+      "description": "Google OAuth redirect URI",
+      "required": false
+    },
+    "MAIL_SERVER": {
+      "description": "Email server for notifications",
+      "required": false
+    },
+    "MAIL_PORT": {
+      "description": "Email server port",
+      "required": false
+    },
+    "MAIL_USERNAME": {
+      "description": "Email username",
+      "required": false
+    },
+    "MAIL_PASSWORD": {
+      "description": "Email password",
+      "required": false
+    },
+    "MAIL_DEFAULT_SENDER": {
+      "description": "Default email sender",
+      "required": false
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "free"
+    }
+  },
+  "addons": [
+    "mongolab"
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ]
+}
